@@ -26,6 +26,12 @@ Each day focuses on one concept with runnable Python experiments.
 - **Key insight**: Conversation history grows cumulatively in agent loops — this is the main cost driver.
 - **Notes**: `notes/day2_context.md`
 
+### Day 3: Prompt Caching and Optimization
+- **Experiment**: `experiments/03_caching_impact.py`
+- **Concepts**: Prompt caching, cache hits/misses, cost optimization for agent loops
+- **Key insight**: Caching reduces costs by 50-90% for repeated context. Essential for production agents where context snowballs.
+- **Notes**: `notes/day3_caching.md`
+
 ## How to Run
 
 ```bash
@@ -44,6 +50,7 @@ pip install -r requirements.txt
 # Run experiments
 python experiments/01_tokenize_and_count.py
 python experiments/02_context_and_counting.py
+python experiments/03_caching_impact.py
 ```
 
 ## Tech Stack
@@ -61,7 +68,6 @@ python experiments/02_context_and_counting.py
 
 ## What's Next
 
-- Day 3: Prompt caching and optimization
 - Day 4: Model comparison framework
 - Day 5: Building a simple agent loop
 - Future: RAG, tool calling, multi-agent systems
