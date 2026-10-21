@@ -32,6 +32,12 @@ Each day focuses on one concept with runnable Python experiments.
 - **Key insight**: Caching reduces costs by 50-90% for repeated context. Essential for production agents where context snowballs.
 - **Notes**: `notes/day3_caching.md`
 
+### Day 4: Model Comparison Framework
+- **Experiment**: `experiments/04_model_comparison_demo.py`
+- **Concepts**: Comparing models on latency, cost, and token efficiency
+- **Key insight**: Cloud models are 2.5x faster but cost money. Local models are free but limited by hardware. Choose based on task requirements.
+- **Notes**: `notes/day4_comparison.md`
+
 ## How to Run
 
 ```bash
@@ -51,6 +57,7 @@ pip install -r requirements.txt
 python experiments/01_tokenize_and_count.py
 python experiments/02_context_and_counting.py
 python experiments/03_caching_impact.py
+python experiments/04_model_comparison_demo.py
 ```
 
 ## Tech Stack
@@ -68,7 +75,6 @@ python experiments/03_caching_impact.py
 
 ## What's Next
 
-- Day 4: Model comparison framework
 - Day 5: Building a simple agent loop
 - Future: RAG, tool calling, multi-agent systems
 
