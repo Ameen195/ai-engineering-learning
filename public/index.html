@@ -56,13 +56,14 @@
     .panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 13px; }
     .panel-title { margin: 0; font-size: 15px; font-weight: 750; }
     .meta { color: var(--muted); font: 11px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; }
-    .editor-shell { display: grid; grid-template-columns: 48px minmax(0, 1fr); min-height: 475px; background: var(--editor); border: 1px solid #353d37; }
+    .editor-shell { display: grid; grid-template-columns: 48px minmax(400px, 1fr); min-height: 475px; background: var(--editor); border: 1px solid #353d37; overflow: hidden; }
     .gutter { overflow: hidden; padding: 15px 10px 15px 0; color: #919c91; text-align: right; font: 12px/1.62 ui-monospace, SFMono-Regular, Consolas, monospace; user-select: none; white-space: pre; }
-    #source { display: block; width: 100%; min-height: 475px; padding: 15px 16px 15px 0; border: 0; outline: 0; resize: vertical; background: transparent; color: var(--editor-ink); caret-color: #a7d6aa; font: 12px/1.62 ui-monospace, SFMono-Regular, Consolas, monospace; tab-size: 4; white-space: pre; overflow: auto; overflow-x: auto; }
-    #source::-webkit-scrollbar { width: 8px; height: 8px; }
+    #source { display: block; width: 100%; min-height: 475px; padding: 15px 16px 15px 0; border: 0; outline: 0; resize: vertical; background: transparent; color: var(--editor-ink); caret-color: #a7d6aa; font: 12px/1.62 ui-monospace, SFMono-Regular, Consolas, monospace; tab-size: 4; white-space: pre; overflow: auto; overflow-x: auto; box-sizing: border-box; }
+    #source::-webkit-scrollbar { width: 10px; height: 10px; }
     #source::-webkit-scrollbar-track { background: var(--editor); }
-    #source::-webkit-scrollbar-thumb { background: #4a5548; border-radius: 4px; }
+    #source::-webkit-scrollbar-thumb { background: #4a5548; border-radius: 5px; }
     #source::-webkit-scrollbar-thumb:hover { background: #5a6558; }
+    #source::-webkit-scrollbar-corner { background: var(--editor); }
     .editor-shell:focus-within { outline: 2px solid var(--focus); outline-offset: 3px; }
     .editor-shell:focus-within #source:focus-visible { outline: 0; }
     .editor-foot { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 12px; }
