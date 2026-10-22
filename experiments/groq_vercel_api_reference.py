@@ -93,7 +93,7 @@ def process_review(body: bytes, authorization: str, env: dict, opener=urlopen) -
     })
 
 
-class handler(BaseHTTPRequestHandler):
+class GroqReviewHandlerReference(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path != "/api/review":
             self._send(404, {"error": "Not found"})

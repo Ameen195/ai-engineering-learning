@@ -92,7 +92,7 @@ class VercelReviewApiTests(unittest.TestCase):
         self.assertNotIn("secret details", json.dumps(body))
 
     def test_handler_rejects_non_json_content_type(self):
-        class FakeHandler(api.handler):
+        class FakeHandler(api.GroqReviewHandlerReference):
             def __init__(self):
                 self.path = "/api/review"
                 self.headers = {"Content-Type": "text/plain"}
