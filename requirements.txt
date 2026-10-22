@@ -1,3 +1,4 @@
 tiktoken==0.14.0
 transformers[sentencepiece]==5.20.1
 requests==2.34.2
+anthropic==0.86.0

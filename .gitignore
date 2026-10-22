@@ -30,3 +30,9 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.log
+
+# Local deployment and secrets
+.vercel/
+.env
+.env.*
+!.env.example

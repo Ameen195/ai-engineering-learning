@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Private Python Code Review</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #111827; color: #e5e7eb; }
+    body { max-width: 880px; margin: 0 auto; padding: 32px 18px 64px; }
+    h1 { margin-bottom: 8px; }
+    p { color: #aeb9ca; line-height: 1.55; }
+    label { display: block; margin: 18px 0 8px; font-weight: 650; }
+    input, textarea, button { font: inherit; }
+    input[type=password], input[type=file], textarea { box-sizing: border-box; width: 100%; padding: 12px; color: #e5e7eb; background: #1f2937; border: 1px solid #475569; border-radius: 8px; }
+    textarea { min-height: 280px; resize: vertical; font-family: ui-monospace, monospace; }
+    button { margin-top: 16px; padding: 11px 18px; border: 0; border-radius: 8px; background: #60a5fa; color: #0b1220; font-weight: 750; cursor: pointer; }
+    button:disabled { opacity: .6; cursor: wait; }
+    .notice { border-left: 3px solid #fbbf24; padding: 8px 12px; background: #1f2937; }
+    .finding { margin: 12px 0; padding: 14px; border: 1px solid #475569; border-radius: 8px; background: #1f2937; }
+    .severity { font-weight: 800; }
+    .error { color: #fca5a5; }
+    .muted { font-size: .9rem; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Python Code Review</h1>
+    <p>Upload one small Python file or paste source to get structured review findings.</p>
+    <p class="notice">Your source is sent to Groq for review and is not saved by this app. Do not submit private or confidential code. Model findings can be wrong or incomplete.</p>
+
+    <form id="review-form">
+      <label for="password">Private demo password</label>
+      <input id="password" type="password" autocomplete="current-password" required>
+
+      <label for="file">Choose a .py file (optional)</label>
+      <input id="file" type="file" accept=".py,text/x-python">
+
+      <label for="source">Or paste Python source (maximum 25 KB)</label>
+      <textarea id="source" spellcheck="false" placeholder="Paste Python source here..."></textarea>
+      <button id="submit" type="submit">Review code</button>
+    </form>
+
+    <section id="status" aria-live="polite" class="muted"></section>
+    <section id="results" aria-label="Review results"></section>
+  </main>
+  <script>
+    const form = document.querySelector("#review-form");
+    const fileInput = document.querySelector("#file");
+    const sourceInput = document.querySelector("#source");
+    const results = document.querySelector("#results");
+    const status = document.querySelector("#status");
+    const submit = document.querySelector("#submit");
+    const maxBytes = 25_000;
+
+    fileInput.addEventListener("change", async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      if (file.size > maxBytes) {
+        status.textContent = "That file is larger than 25 KB.";
+        fileInput.value = "";
+        return;
+      }
+      sourceInput.value = await file.text();
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      results.replaceChildren();
+      const source = sourceInput.value;
+      if (!source.trim()) {
+        status.textContent = "Choose a file or paste Python source first.";
+        return;
+      }
+      if (new TextEncoder().encode(source).length > maxBytes) {
+        status.textContent = "Source exceeds the 25 KB limit.";
+        return;
+      }
+
+      submit.disabled = true;
+      status.className = "muted";
+      status.textContent = "Reviewing…";
+      try {
+        const response = await fetch("/api/review", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${document.querySelector("#password").value}`
+          },
+          body: JSON.stringify({ source })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
+
+        if (!data.findings.length) {
+          const empty = document.createElement("p");
+          empty.textContent = "No actionable findings returned. This is not proof the code is bug-free.";
+          results.append(empty);
+        }
+        for (const finding of data.findings) {
+          const card = document.createElement("article");
+          card.className = "finding";
+          const heading = document.createElement("h2");
+          heading.className = "severity";
+          heading.textContent = `[${finding.severity.toUpperCase()}] ${finding.title} — line ${finding.line ?? "unknown"}`;
+          const explanation = document.createElement("p");
+          explanation.textContent = `Why: ${finding.explanation}`;
+          const recommendation = document.createElement("p");
+          recommendation.textContent = `Recommendation: ${finding.recommendation}`;
+          card.append(heading, explanation, recommendation);
+          results.append(card);
+        }
+        const summary = document.createElement("p");
+        const usage = data.usage || {};
+        summary.textContent = `Model: ${data.model}; request latency: ${data.latency_seconds}s` +
+          (usage.prompt_tokens !== undefined ? `; input tokens: ${usage.prompt_tokens}` : "") +
+          (usage.completion_tokens !== undefined ? `; output tokens: ${usage.completion_tokens}` : "");
+        results.append(summary);
+        status.textContent = "Review complete. Verify findings before acting.";
+      } catch (error) {
+        status.textContent = error.message;
+        status.className = "error";
+      } finally {
+        submit.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
