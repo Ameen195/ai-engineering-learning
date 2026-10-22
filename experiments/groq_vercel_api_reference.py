@@ -1,12 +1,16 @@
+"""Reference-only Groq Vercel handler from the earlier deployment stage.
+
+This module is retained for learning and tests; it is no longer deployed by Vercel.
+"""
+
 import hmac
 import json
 import os
 import time
-from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
-
 from http.server import BaseHTTPRequestHandler
+
 from experiments.review_core import MAX_SOURCE_BYTES, build_prompt, parse_findings
 
 MAX_BODY_BYTES = MAX_SOURCE_BYTES + 2_000

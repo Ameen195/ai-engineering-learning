@@ -1,90 +1,42 @@
-# Day 5: First Code Review Agent
+# Day 5: Code Review Learning Project
 
-## Goal and current MVP
+## Deployed browser demo: Review Bench
 
-Build a read-only reviewer for one Python file. The project has three ways to use it:
+The Vercel site is a static page. Its browser-side checks run locally on the source text; the page does not send source to a backend or AI provider, and it does not need a Groq key or demo password.
 
-1. Local CLI static checks using Python's AST: reports syntax errors, `eval()`/`exec()`, bare `except`, and subprocess calls with `shell=True`.
-2. Optional Claude CLI review: with `--claude`, sends one file to Anthropic and validates structured findings.
-3. Private Vercel web app: static upload/paste page calls a password-gated Python function, which sends one file to Groq and validates structured findings.
+The visual interface is a developer workbench: source editor at left, findings at right, with severity, explanation, recommendation, and a jump-to-line control.
 
-The app does not execute code or persist submitted source. Local rules are intentionally limited and are not a full security audit. The password is an app-level gate, not identity authentication; enable Vercel deployment protection as an additional layer where available.
+### Rules checked
 
-## Concept: model output needs a boundary
+- Calls to `eval()` or `exec()` — high severity pattern warning.
+- Bare `except:` handlers — medium severity pattern warning.
+- One-line `subprocess.run()`, `Popen()`, or `call()` calls with `shell=True` — high severity pattern warning.
 
-A model can suggest issues, but its response is ordinary generated text until the program validates it. We ask for JSON, parse it, check each finding's fields/severity/line, and only then render it. This makes the *shape* predictable; it does not prove a finding is correct or complete.
+These are intentionally simple line-level heuristics, not Python AST analysis, an LLM review, a complete scanner, or a security audit. They can miss multi-line patterns, false-positive on harmless code, and cannot reason about program context. No match does not mean the code is safe.
 
-The source file is marked as untrusted input in the prompt. This is a useful instruction, not a security guarantee. We also limit the input size and never execute reviewed code.
+### Run and test the static demo
 
-## Run it
-
-Set the API key in the current terminal only; do not put it in a source file or commit it.
-
-Run local static checks without a key or API request:
+Open `public/index.html` in a browser or deploy the `public` directory as a static Vercel site. To run checks:
 
 ```powershell
-python experiments/05_code_review_agent.py experiments/samples/review_me.py
+npm run test:review
 ```
 
-For an optional live review, set the API key in the current terminal only, then opt in with `--claude`:
+The browser demo can load a local `.py` file or accept pasted source up to 25,000 bytes. It does not retain source after the page is closed.
 
-```powershell
-$env:ANTHROPIC_API_KEY = "your-key"
-python experiments/05_code_review_agent.py experiments/samples/review_me.py --claude
-```
+### Vercel deployment
 
-This sends the source to Anthropic and uses API credits. Do not submit confidential code unless permitted.
+Use the `Other` preset, leave build and install commands empty, and select `public` as the output directory. No Vercel environment variables are needed for the static demo. Hosting still follows the account's plan limits and terms; static hosting avoids Groq/model inference charges but does not guarantee every account's total cost is zero.
 
-Optional model override:
-```powershell
-$env:ANTHROPIC_MODEL = "model-id-from-current-Anthropic-docs"
-```
+## Preserved API experiments (not deployed)
 
-The default model ID is `claude-sonnet-5-5` as listed in Anthropic's model overview when this experiment was created. Model names and availability can change; check current provider docs before running.
+- `experiments/05_code_review_agent.py` retains a local Python AST checker and optional Claude CLI code path.
+- `experiments/groq_vercel_api_reference.py` preserves the earlier Groq HTTP handler for learning; Vercel no longer deploys it as a function.
+- Python tests for that reference use mocked provider responses. They do not make network requests or consume API credits.
 
-Local checks do not need the Anthropic SDK at runtime or an API key. The SDK is only needed for `--claude` mode.
+## Safety and privacy boundaries
 
-## Run offline tests
-
-```powershell
-python -m unittest discover -s tests -v
-```
-
-Tests use a mocked API response, need no API key/network, and do not incur model charges.
-
-## What is measured and what is not
-
-- Request latency is measured locally with a monotonic timer.
-- Input/output usage is printed only when returned by the API.
-- The script does not report a billing amount or estimate one.
-- Findings are suggestions. Verify them against the source and tests.
-
-## Limitations
-
-- A single model call has no agent/tool loop yet.
-- It reviews only one UTF-8 `.py` file up to 25,000 bytes.
-- It may miss defects, misunderstand context, or return false positives.
-- Line references and JSON structure are checked, but semantic correctness is not.
-- The Claude CLI sends source to Anthropic; the Vercel web app sends source to Groq. Do not submit confidential code unless permitted by your organization and the provider's current data policies.
-- The web app does not write source to an application database or file, but this does not determine provider-side retention or processing.
-- No caching is requested or assumed in this first stage.
-
-## Deploy the private Groq web demo
-
-1. Push the app files to the GitHub repository and import that repository into Vercel.
-2. Set these server-side environment variables in Vercel Project Settings → Environment Variables:
-   - `GROQ_API_KEY`: your Groq key
-   - `APP_PASSWORD`: a unique password of at least 20 characters
-   - `GROQ_MODEL`: optional; defaults to `openai/gpt-oss-20b`
-3. Enable Vercel Deployment Protection before using the deployed endpoint. The shared password gate alone is not account authentication and does not include rate limiting.
-4. Redeploy after adding variables. Open the protected deployment URL, enter the app password, and try `experiments/samples/review_me.py`.
-5. Check Groq's Console for current model availability, rate limits, and billing. An API key does not guarantee free usage.
-
-The Groq key is sent only from the Vercel server to Groq; it is not included in the browser. The browser sends Python source to the Vercel endpoint, which forwards it to Groq for inference.
-
-## Key terms
-
-- **Structured output**: model text requested in a known data format, here JSON.
-- **Validation**: deterministic checks that the response matches the expected fields and types.
-- **False positive**: a reported issue that is not actually a defect.
-- **False negative**: a real defect the model does not report.
+- Reviewed source is not executed by the static browser checker.
+- The static browser checker makes no network call for review.
+- The separate Claude CLI and Groq reference integrations send source to those providers only when explicitly configured and invoked. Provider policies and charges apply; don't submit confidential code without authorization.
+- No model/API usage is claimed or measured by the static page.

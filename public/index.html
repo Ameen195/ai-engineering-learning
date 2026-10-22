@@ -3,127 +3,389 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Private Python Code Review</title>
+  <meta name="theme-color" content="#f4f2ec">
+  <title>Review Bench · Python pattern checker</title>
   <style>
-    :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #111827; color: #e5e7eb; }
-    body { max-width: 880px; margin: 0 auto; padding: 32px 18px 64px; }
-    h1 { margin-bottom: 8px; }
-    p { color: #aeb9ca; line-height: 1.55; }
-    label { display: block; margin: 18px 0 8px; font-weight: 650; }
-    input, textarea, button { font: inherit; }
-    input[type=password], input[type=file], textarea { box-sizing: border-box; width: 100%; padding: 12px; color: #e5e7eb; background: #1f2937; border: 1px solid #475569; border-radius: 8px; }
-    textarea { min-height: 280px; resize: vertical; font-family: ui-monospace, monospace; }
-    button { margin-top: 16px; padding: 11px 18px; border: 0; border-radius: 8px; background: #60a5fa; color: #0b1220; font-weight: 750; cursor: pointer; }
-    button:disabled { opacity: .6; cursor: wait; }
-    .notice { border-left: 3px solid #fbbf24; padding: 8px 12px; background: #1f2937; }
-    .finding { margin: 12px 0; padding: 14px; border: 1px solid #475569; border-radius: 8px; background: #1f2937; }
-    .severity { font-weight: 800; }
-    .error { color: #fca5a5; }
-    .muted { font-size: .9rem; }
-    [hidden] { display: none !important; }
+    :root {
+      color-scheme: light;
+      --paper: #f4f2ec;
+      --surface: #fbfaf6;
+      --ink: #20231e;
+      --muted: #686c62;
+      --rule: #d8d7ce;
+      --editor: #202722;
+      --editor-ink: #e7e9df;
+      --green: #315b45;
+      --green-soft: #e4eee6;
+      --coral: #a44936;
+      --coral-soft: #f5e8e2;
+      --amber: #886222;
+      --amber-soft: #f3eddc;
+      --focus: #205f9b;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; }
+    button, input, textarea { font: inherit; }
+    button { color: inherit; }
+    .page { max-width: 1480px; margin-inline: auto; padding: 0 36px 64px; }
+    .topline { display: flex; justify-content: space-between; align-items: center; min-height: 64px; border-bottom: 1px solid var(--rule); }
+    .brand { display: flex; align-items: center; gap: 11px; font-size: 14px; font-weight: 750; letter-spacing: .02em; }
+    .brand-mark { width: 27px; height: 27px; display: grid; place-items: center; border: 1px solid var(--green); color: var(--green); font: 700 13px/1 ui-monospace, monospace; }
+    .top-meta { display: flex; gap: 20px; align-items: center; color: var(--muted); font-size: 12px; }
+    .local-state { display: inline-flex; align-items: center; gap: 7px; color: var(--green); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; font-size: 10px; }
+    .local-state::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #528163; }
+    .intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 330px); gap: 48px; align-items: end; padding: 48px 0 30px; }
+    .eyebrow { margin: 0 0 12px; color: var(--green); text-transform: uppercase; letter-spacing: .13em; font-size: 11px; font-weight: 800; }
+    h1 { max-width: 780px; margin: 0; font-size: clamp(38px, 5vw, 64px); letter-spacing: -.055em; line-height: .99; font-weight: 730; }
+    .lede { max-width: 660px; margin: 17px 0 0; color: var(--muted); font-size: 16px; line-height: 1.55; }
+    .intro-aside { border-left: 1px solid var(--rule); padding: 4px 0 4px 18px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .intro-aside strong { display: block; color: var(--ink); margin-bottom: 4px; font-size: 13px; }
+    .toolbar { display: flex; align-items: center; justify-content: space-between; min-height: 50px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule); gap: 16px; }
+    .section-label { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
+    .toolbar-actions { display: flex; align-items: center; gap: 16px; }
+    .text-button { border: 0; background: transparent; padding: 8px 0; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; font-size: 12px; }
+    .text-button:hover { color: var(--ink); }
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(330px, .85fr); min-height: 610px; border-bottom: 1px solid var(--ink); }
+    .source-panel { min-width: 0; padding: 20px 24px 22px 0; border-right: 1px solid var(--rule); }
+    .findings-panel { min-width: 0; padding: 20px 0 22px 24px; }
+    .panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 13px; }
+    .panel-title { margin: 0; font-size: 15px; font-weight: 750; }
+    .meta { color: var(--muted); font: 11px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .editor-shell { display: grid; grid-template-columns: 48px minmax(0, 1fr); min-height: 475px; background: var(--editor); border: 1px solid #353d37; }
+    .gutter { overflow: hidden; padding: 15px 10px 15px 0; color: #919c91; text-align: right; font: 12px/1.62 ui-monospace, SFMono-Regular, Consolas, monospace; user-select: none; white-space: pre; }
+    #source { display: block; width: 100%; min-height: 475px; padding: 15px 16px 15px 0; border: 0; outline: 0; resize: vertical; background: transparent; color: var(--editor-ink); caret-color: #a7d6aa; font: 12px/1.62 ui-monospace, SFMono-Regular, Consolas, monospace; tab-size: 4; white-space: pre; overflow: auto; }
+    .editor-shell:focus-within { outline: 2px solid var(--focus); outline-offset: 3px; }
+    .editor-shell:focus-within #source:focus-visible { outline: 0; }
+    .editor-foot { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-top: 12px; }
+    .file-button { display: inline-flex; align-items: center; min-height: 40px; padding: 0 12px; border: 1px solid var(--rule); background: transparent; cursor: pointer; font-size: 12px; font-weight: 650; }
+    .file-button:hover { border-color: var(--green); color: var(--green); }
+    #file { position: absolute; inline-size: 1px; block-size: 1px; clip-path: inset(50%); overflow: hidden; white-space: nowrap; }
+    #file:focus-visible + .file-button { outline: 2px solid var(--focus); outline-offset: 3px; }
+    .file-name { color: var(--muted); font: 11px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; }
+    .drop-hint { margin: 12px 0 0; color: var(--muted); font-size: 11px; }
+    .primary { min-height: 44px; padding: 0 17px; border: 1px solid var(--green); background: var(--green); color: #fff; cursor: pointer; font-size: 12px; font-weight: 750; letter-spacing: .02em; }
+    .primary:hover { background: #244833; }
+    .primary:disabled { opacity: .58; cursor: wait; }
+    .primary:focus-visible, .text-button:focus-visible, .file-button:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+    .result-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    .run-summary { min-height: 40px; margin: 13px 0 18px; padding: 10px 0; border-block: 1px solid var(--rule); color: var(--muted); font: 11px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace; }
+    #status { min-height: 20px; margin: 0 0 12px; color: var(--muted); font-size: 12px; }
+    #status[data-state="error"] { color: var(--coral); font-weight: 700; }
+    .empty { display: grid; min-height: 260px; place-content: center; padding: 20px; text-align: center; color: var(--muted); }
+    .empty-mark { margin: 0 auto 15px; display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid var(--rule); color: var(--green); font: 18px/1 ui-monospace, monospace; }
+    .empty strong { display: block; margin-bottom: 6px; color: var(--ink); font-size: 14px; }
+    .empty p { max-width: 300px; margin: 0; font-size: 12px; line-height: 1.55; }
+    .finding-list { display: grid; gap: 0; }
+    .finding { display: grid; grid-template-columns: 55px minmax(0, 1fr); gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--rule); }
+    .finding:first-child { border-top: 1px solid var(--rule); }
+    .finding-index { color: var(--muted); font: 11px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
+    .finding-main { min-width: 0; }
+    .finding-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .finding h3 { margin: 0; font-size: 14px; line-height: 1.35; }
+    .severity { flex: 0 0 auto; padding: 3px 6px; font: 700 9px/1.2 ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: .06em; text-transform: uppercase; }
+    .severity-high { background: var(--coral-soft); color: var(--coral); }
+    .severity-medium { background: var(--amber-soft); color: var(--amber); }
+    .finding p { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .recommendation { padding-left: 10px; border-left: 2px solid var(--green); }
+    .go-line { display: inline-block; margin-top: 9px; border: 0; padding: 0; background: transparent; color: var(--green); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; font-size: 11px; font-weight: 700; }
+    .go-line:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+    .footnote { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 18px 0 0; color: var(--muted); font-size: 11px; line-height: 1.55; }
+    .footnote p { margin: 0; }
+    .footnote strong { color: var(--ink); }
+    .drag-over .editor-shell { outline: 2px dashed var(--green); outline-offset: 4px; }
+    @media (max-width: 900px) {
+      .page { padding-inline: 22px; }
+      .intro { grid-template-columns: 1fr; gap: 20px; padding-top: 36px; }
+      .intro-aside { max-width: 520px; }
+      .workspace { grid-template-columns: 1fr; }
+      .source-panel { padding: 18px 0 22px; border-right: 0; border-bottom: 1px solid var(--rule); }
+      .findings-panel { padding: 20px 0; }
+      .editor-shell, #source { min-height: 380px; }
+    }
+    @media (max-width: 560px) {
+      .page { padding-inline: 16px; }
+      .topline { min-height: 56px; }
+      .top-meta { gap: 10px; }
+      .intro { padding: 30px 0 23px; }
+      .lede { font-size: 14px; }
+      .toolbar { align-items: flex-start; padding: 11px 0; }
+      .toolbar-actions { gap: 10px; }
+      .workspace { min-height: 0; }
+      .editor-shell, #source { min-height: 320px; }
+      .editor-foot { flex-wrap: wrap; }
+      .editor-foot .primary { width: 100%; }
+      .file-button { min-height: 44px; }
+      .footnote { grid-template-columns: 1fr; gap: 10px; }
+      .finding { grid-template-columns: 37px minmax(0, 1fr); gap: 8px; }
+      .finding-title-row { flex-direction: column-reverse; align-items: flex-start; gap: 6px; }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      .finding { animation: arrive 180ms ease-out both; }
+      @keyframes arrive { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    }
   </style>
 </head>
 <body>
-  <main>
-    <h1>Python Code Review</h1>
-    <p>Upload one small Python file or paste source to get structured review findings.</p>
-    <p class="notice">Your source is sent to Groq for review and is not saved by this app. Do not submit private or confidential code. Model findings can be wrong or incomplete.</p>
+  <div class="page">
+    <header class="topline">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">RB</span><span>Review Bench</span></div>
+      <div class="top-meta"><span class="local-state">Local checks</span><span>Python · v0.1</span></div>
+    </header>
 
-    <form id="review-form">
-      <label for="password">Private demo password</label>
-      <input id="password" type="password" autocomplete="current-password" required>
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div>
+          <p class="eyebrow">A small, transparent code-checking lab</p>
+          <h1 id="page-title">Find risky patterns<br>before they ship.</h1>
+          <p class="lede">Run a few readable checks against a Python file. Your source stays in this browser; nothing is sent to an AI model.</p>
+        </div>
+        <aside class="intro-aside"><strong>What this is</strong>A local heuristic demo for three patterns, not an LLM review, full static analyzer, or security audit.</aside>
+      </section>
 
-      <label for="file">Choose a .py file (optional)</label>
-      <input id="file" type="file" accept=".py,text/x-python">
+      <div class="toolbar">
+        <h2 class="section-label">Review workspace</h2>
+        <div class="toolbar-actions">
+          <button class="text-button" id="load-sample" type="button">Load sample</button>
+          <button class="text-button" id="clear-source" type="button">Clear</button>
+        </div>
+      </div>
 
-      <label for="source">Or paste Python source (maximum 25 KB)</label>
-      <textarea id="source" spellcheck="false" placeholder="Paste Python source here..."></textarea>
-      <button id="submit" type="submit">Review code</button>
-    </form>
+      <div class="workspace" id="workspace">
+        <section class="source-panel" aria-labelledby="source-title">
+          <div class="panel-head">
+            <h2 class="panel-title" id="source-title">01 / Source</h2>
+            <span class="meta" id="byte-count">0 / 25,000 bytes</span>
+          </div>
+          <div class="editor-shell" id="drop-zone">
+            <div class="gutter" id="line-numbers" aria-hidden="true">1</div>
+            <label class="sr-only" for="source">Python source code</label>
+            <textarea id="source" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="editor-hint byte-count" placeholder="# Paste Python code here or open a .py file"></textarea>
+          </div>
+          <div class="editor-foot">
+            <div>
+              <input id="file" type="file" accept=".py,text/x-python" aria-label="Open a Python file">
+              <label class="file-button" for="file">Open .py file</label>
+              <span class="file-name" id="file-name">No file selected</span>
+            </div>
+            <button class="primary" id="review" type="button">Run local checks</button>
+          </div>
+          <p class="drop-hint" id="editor-hint">Drop a file here or paste source. Max 25 KB. Review logic runs locally in your browser.</p>
+        </section>
 
-    <section id="status" aria-live="polite" class="muted"></section>
-    <section id="results" aria-label="Review results"></section>
-  </main>
-  <script>
-    const form = document.querySelector("#review-form");
+        <section class="findings-panel" aria-labelledby="findings-title">
+          <div class="result-top">
+            <h2 class="panel-title" id="findings-title">02 / Findings</h2>
+            <span class="meta" id="finding-count">Ready</span>
+          </div>
+          <p id="status" aria-live="polite">Add Python source, then run the checks.</p>
+          <div class="run-summary" id="run-summary">No review run yet</div>
+          <div id="results" aria-live="polite" aria-relevant="additions text">
+            <div class="empty"><span class="empty-mark" aria-hidden="true">{ }</span><div><strong>Your findings will appear here</strong><p>Checks cover dynamic evaluation, bare exception handlers, and subprocess calls using shell=True.</p></div></div>
+          </div>
+        </section>
+      </div>
+
+      <footer class="footnote">
+        <p><strong>Privacy:</strong> Source is read and checked in this browser. This page makes no review API request and stores nothing.</p>
+        <p><strong>Limits:</strong> Pattern matches can miss issues or flag harmless code. Vercel hosting still follows your plan’s limits; this demo makes no model/API calls.</p>
+      </footer>
+    </main>
+  </div>
+  <script type="module">
+    import { MAX_SOURCE_BYTES, reviewSource } from "./review.js";
+
+    const workspace = document.querySelector("#workspace");
+    const editor = document.querySelector("#source");
     const fileInput = document.querySelector("#file");
-    const sourceInput = document.querySelector("#source");
-    const results = document.querySelector("#results");
+    const fileName = document.querySelector("#file-name");
+    const lineNumbers = document.querySelector("#line-numbers");
+    const byteCount = document.querySelector("#byte-count");
     const status = document.querySelector("#status");
-    const submit = document.querySelector("#submit");
-    const maxBytes = 25_000;
+    const results = document.querySelector("#results");
+    const findingCount = document.querySelector("#finding-count");
+    const runSummary = document.querySelector("#run-summary");
+    const reviewButton = document.querySelector("#review");
 
+    function updateEditorMeta() {
+      const bytes = new TextEncoder().encode(editor.value).length;
+      const lines = Math.max(1, editor.value.split("\n").length);
+      byteCount.textContent = `${bytes.toLocaleString()} / ${MAX_SOURCE_BYTES.toLocaleString()} bytes`;
+      byteCount.style.color = bytes > MAX_SOURCE_BYTES ? "var(--coral)" : "";
+      lineNumbers.textContent = Array.from({ length: lines }, (_, index) => index + 1).join("\n");
+    }
+
+    function showEmpty(title, detail) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "empty";
+      const mark = document.createElement("span");
+      mark.className = "empty-mark";
+      mark.setAttribute("aria-hidden", "true");
+      mark.textContent = "{ }";
+      const content = document.createElement("div");
+      const heading = document.createElement("strong");
+      heading.textContent = title;
+      const description = document.createElement("p");
+      description.textContent = detail;
+      content.append(heading, description);
+      wrapper.append(mark, content);
+      results.replaceChildren(wrapper);
+    }
+
+    function renderFindings(findings) {
+      if (!findings.length) {
+        showEmpty("No checked patterns found", "That does not prove the file is safe. These local checks cover only a few recognizable patterns.");
+        return;
+      }
+      const list = document.createElement("div");
+      list.className = "finding-list";
+      findings.forEach((finding, index) => {
+        const item = document.createElement("article");
+        item.className = "finding";
+        const number = document.createElement("span");
+        number.className = "finding-index";
+        number.textContent = `#${String(index + 1).padStart(2, "0")}`;
+        const main = document.createElement("div");
+        main.className = "finding-main";
+        const row = document.createElement("div");
+        row.className = "finding-title-row";
+        const title = document.createElement("h3");
+        title.textContent = finding.title;
+        const severity = document.createElement("span");
+        severity.className = `severity severity-${finding.severity}`;
+        severity.textContent = finding.severity;
+        row.append(title, severity);
+        const explanation = document.createElement("p");
+        explanation.textContent = finding.explanation;
+        const recommendation = document.createElement("p");
+        recommendation.className = "recommendation";
+        recommendation.textContent = finding.recommendation;
+        const jump = document.createElement("button");
+        jump.className = "go-line";
+        jump.type = "button";
+        jump.textContent = `Go to line ${finding.line}`;
+        jump.addEventListener("click", () => {
+          const before = editor.value.split("\n").slice(0, finding.line - 1).join("\n");
+          const position = before.length + (finding.line > 1 ? 1 : 0);
+          editor.focus();
+          editor.setSelectionRange(position, position);
+          const lineHeight = Number.parseFloat(getComputedStyle(editor).lineHeight);
+          editor.scrollTop = Math.max(0, (finding.line - 1) * lineHeight - editor.clientHeight / 2);
+        });
+        main.append(row, explanation, recommendation, jump);
+        item.append(number, main);
+        list.append(item);
+      });
+      results.replaceChildren(list);
+    }
+
+    editor.addEventListener("input", updateEditorMeta);
+    editor.addEventListener("scroll", () => { lineNumbers.scrollTop = editor.scrollTop; });
+    document.querySelector("#clear-source").addEventListener("click", () => {
+      editor.value = "";
+      fileInput.value = "";
+      fileName.textContent = "No file selected";
+      findingCount.textContent = "Ready";
+      runSummary.textContent = "No review run yet";
+      status.textContent = "Source cleared.";
+      updateEditorMeta();
+      showEmpty("Your findings will appear here", "Add Python source, then run the local pattern checks.");
+      editor.focus();
+    });
+    document.querySelector("#load-sample").addEventListener("click", () => {
+      editor.value = "import subprocess\n\ndef calculate(expression):\n    try:\n        return eval(expression)\n    except:\n        return None\n\ndef run_command(command):\n    return subprocess.run(command, shell=True)\n";
+      fileInput.value = "";
+      fileName.textContent = "Built-in sample";
+      updateEditorMeta();
+      status.textContent = "Sample loaded. Run local checks when ready.";
+      editor.focus();
+    });
     fileInput.addEventListener("change", async () => {
       const file = fileInput.files[0];
       if (!file) return;
-      if (file.size > maxBytes) {
+      if (!file.name.toLowerCase().endsWith(".py")) {
+        status.dataset.state = "error";
+        status.textContent = "Choose a file with a .py extension.";
+        fileInput.value = "";
+        return;
+      }
+      if (file.size > MAX_SOURCE_BYTES) {
+        status.dataset.state = "error";
         status.textContent = "That file is larger than 25 KB.";
         fileInput.value = "";
         return;
       }
-      sourceInput.value = await file.text();
+      editor.value = await file.text();
+      fileName.textContent = file.name;
+      status.dataset.state = "";
+      status.textContent = "File opened locally. Nothing has been uploaded.";
+      updateEditorMeta();
     });
 
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      results.replaceChildren();
-      const source = sourceInput.value;
+    for (const eventName of ["dragenter", "dragover"]) {
+      workspace.addEventListener(eventName, event => {
+        event.preventDefault();
+        workspace.classList.add("drag-over");
+      });
+    }
+    for (const eventName of ["dragleave", "drop"]) {
+      workspace.addEventListener(eventName, event => {
+        event.preventDefault();
+        workspace.classList.remove("drag-over");
+      });
+    }
+    workspace.addEventListener("drop", async event => {
+      const file = event.dataTransfer.files[0];
+      if (!file) return;
+      if (!file.name.toLowerCase().endsWith(".py") || file.size > MAX_SOURCE_BYTES) {
+        status.dataset.state = "error";
+        status.textContent = "Drop a .py file no larger than 25 KB.";
+        return;
+      }
+      editor.value = await file.text();
+      fileName.textContent = file.name;
+      status.dataset.state = "";
+      status.textContent = "File opened locally. Nothing has been uploaded.";
+      updateEditorMeta();
+    });
+
+    reviewButton.addEventListener("click", () => {
+      const source = editor.value;
+      const bytes = new TextEncoder().encode(source).length;
       if (!source.trim()) {
-        status.textContent = "Choose a file or paste Python source first.";
+        status.dataset.state = "error";
+        status.textContent = "Add Python source before running checks.";
+        editor.focus();
         return;
       }
-      if (new TextEncoder().encode(source).length > maxBytes) {
-        status.textContent = "Source exceeds the 25 KB limit.";
+      if (bytes > MAX_SOURCE_BYTES) {
+        status.dataset.state = "error";
+        status.textContent = "Source exceeds the 25 KB limit. Reduce the file size and try again.";
+        editor.focus();
         return;
       }
-
-      submit.disabled = true;
-      status.className = "muted";
-      status.textContent = "Reviewing…";
-      try {
-        const response = await fetch("/api/review", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${document.querySelector("#password").value}`
-          },
-          body: JSON.stringify({ source })
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
-
-        if (!data.findings.length) {
-          const empty = document.createElement("p");
-          empty.textContent = "No actionable findings returned. This is not proof the code is bug-free.";
-          results.append(empty);
-        }
-        for (const finding of data.findings) {
-          const card = document.createElement("article");
-          card.className = "finding";
-          const heading = document.createElement("h2");
-          heading.className = "severity";
-          heading.textContent = `[${finding.severity.toUpperCase()}] ${finding.title} — line ${finding.line ?? "unknown"}`;
-          const explanation = document.createElement("p");
-          explanation.textContent = `Why: ${finding.explanation}`;
-          const recommendation = document.createElement("p");
-          recommendation.textContent = `Recommendation: ${finding.recommendation}`;
-          card.append(heading, explanation, recommendation);
-          results.append(card);
-        }
-        const summary = document.createElement("p");
-        const usage = data.usage || {};
-        summary.textContent = `Model: ${data.model}; request latency: ${data.latency_seconds}s` +
-          (usage.prompt_tokens !== undefined ? `; input tokens: ${usage.prompt_tokens}` : "") +
-          (usage.completion_tokens !== undefined ? `; output tokens: ${usage.completion_tokens}` : "");
-        results.append(summary);
-        status.textContent = "Review complete. Verify findings before acting.";
-      } catch (error) {
-        status.textContent = error.message;
-        status.className = "error";
-      } finally {
-        submit.disabled = false;
-      }
+      reviewButton.disabled = true;
+      status.dataset.state = "";
+      status.textContent = "Checking local patterns…";
+      findingCount.textContent = "Running";
+      runSummary.textContent = "Browser-only pattern scan · no network request";
+      window.setTimeout(() => {
+        const start = performance.now();
+        const findings = reviewSource(source);
+        const elapsed = performance.now() - start;
+        renderFindings(findings);
+        findingCount.textContent = `${findings.length} ${findings.length === 1 ? "finding" : "findings"}`;
+        runSummary.textContent = `3 pattern rules · ${source.split("\n").length} source lines · ${elapsed.toFixed(2)} ms`;
+        status.textContent = findings.length ? `Checks complete. ${findings.length} pattern ${findings.length === 1 ? "match" : "matches"}; review each in context.` : "Checks complete. No configured patterns matched.";
+        reviewButton.disabled = false;
+      }, 80);
     });
+
+    updateEditorMeta();
   </script>
 </body>
 </html>

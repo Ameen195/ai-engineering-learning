@@ -1,0 +1,8 @@
+{
+  "name": "ai-engineering-learning-lab",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:review": "node --test tests/test_review.js"
+  }
+}

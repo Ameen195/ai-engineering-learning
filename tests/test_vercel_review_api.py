@@ -5,7 +5,7 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
 
-API_PATH = Path(__file__).parents[1] / "api" / "review.py"
+API_PATH = Path(__file__).parents[1] / "experiments" / "groq_vercel_api_reference.py"
 SPEC = importlib.util.spec_from_file_location("vercel_review_api", API_PATH)
 api = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(api)
