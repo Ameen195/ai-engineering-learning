@@ -60,6 +60,12 @@ Each day focuses on one concept with runnable Python experiments.
 - **Key insight**: Generation is slow because it's inherently sequential; each token depends on all previous
 - **Notes**: `notes/day7_transformer_block.md`
 
+### Day 8: Model Internals - VRAM and Quantization
+- **Experiment**: `experiments/08_vram_calculator.py` — calculates VRAM for different models and precisions
+- **Concepts**: Parameters, training vs inference, FP32/FP16/INT8/INT4 quantization, KV cache, CPU offloading
+- **Key insight**: INT4 quantization lets your 4GB GPU run 7-8B parameter models
+- **Notes**: `notes/day8_vram.md`
+
 ## How to Run
 
 ```bash
