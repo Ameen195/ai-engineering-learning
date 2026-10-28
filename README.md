@@ -66,6 +66,18 @@ Each day focuses on one concept with runnable Python experiments.
 - **Key insight**: INT4 quantization lets your 4GB GPU run 7-8B parameter models
 - **Notes**: `notes/day8_vram.md`
 
+### Day 9: AI Agents - Structured Outputs and Tool Calling
+- **Experiment**: `experiments/09_agent_structured_output.py` — simulates agent loop with tool calling
+- **Concepts**: Structured outputs, tool calling, agent loops, planning
+- **Key insight**: Agents use tools to take actions — VRAM calculator, token counter, code reviewer
+- **Notes**: `notes/day9_agents.md`
+
+### Day 10: LLM APIs - Structured Outputs and Error Handling
+- **Experiment**: `experiments/10_api_patterns.py` — demonstrates API call structure, structured JSON outputs, and error handling
+- **Concepts**: API authentication, message format, temperature/max_tokens parameters, JSON schemas, retry logic, rate limiting
+- **Key insight**: Structured outputs with JSON schemas eliminate parsing errors; exponential backoff prevents crashes on rate limits
+- **Notes**: `notes/day10_apis.md`
+
 ## How to Run
 
 ```bash
