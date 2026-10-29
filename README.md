@@ -78,6 +78,18 @@ Each day focuses on one concept with runnable Python experiments.
 - **Key insight**: Structured outputs with JSON schemas eliminate parsing errors; exponential backoff prevents crashes on rate limits
 - **Notes**: `notes/day10_apis.md`
 
+### Day 11: Building a Complete Learning Assistant Agent
+- **Experiment**: `experiments/11_learning_assistant_agent.py` — integrates all Days 1-10 tools into a working agent
+- **Concepts**: Agent loop architecture, tool integration, conversation management, prompt caching, cost tracking, error handling
+- **Key insight**: Each day's learning compounds — tokenization, VRAM, model comparison, and API patterns combine into a complete agent
+- **Notes**: `notes/day11_agent.md`
+
+### Day 12: Real LLM Integration - Provider Abstraction
+- **Experiment**: `experiments/12_api_providers.py` — provider abstraction layer with Anthropic/OpenAI/Ollama support
+- **Concepts**: Provider abstraction, retry logic with exponential backoff, structured JSON outputs, fallback chains, cost tracking
+- **Key insight**: Provider abstraction lets you switch between cloud/local backends; retry logic and fallback chains prevent crashes from transient failures
+- **Notes**: `notes/day12_api_providers.md`
+
 ## How to Run
 
 ```bash
