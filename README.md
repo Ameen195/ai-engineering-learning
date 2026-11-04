@@ -90,6 +90,18 @@ Each day focuses on one concept with runnable Python experiments.
 - **Key insight**: Provider abstraction lets you switch between cloud/local backends; retry logic and fallback chains prevent crashes from transient failures
 - **Notes**: `notes/day12_api_providers.md`
 
+### Day 13: Job Description Analyzer Agent (Capstone)
+- **Experiment**: `experiments/13_job_analyzer_agent.py` — capstone agent integrating all Days 1-12 tools
+- **Concepts**: Agent loop architecture, structured job parsing, skill gap analysis, learning path generation, hardware-aware recommendations
+- **Key insight**: Each day's learning builds toward a practical AI agent that analyzes job descriptions and generates personalized learning roadmaps
+- **Notes**: `notes/day13_job_analyzer.md`
+
+### Day 14: RAG and Vector Databases
+- **Experiment**: `experiments/14_rag_demo.py` — complete RAG pipeline with vector similarity search
+- **Concepts**: Vector embeddings, cosine similarity, vector databases, document chunking, retrieval-augmented generation
+- **Key insight**: The demo retrieves note chunks using simple TF-IDF-like vectors; it does not call an LLM to generate grounded answers
+- **Notes**: `notes/day14_rag.md`
+
 ## How to Run
 
 ```bash
